@@ -1,0 +1,1 @@
+#source "$BR2_EXTERNAL_CSDK_APPLIANCE_PATH/package/simple_stream_server/Config.in"

@@ -1,0 +1,4 @@
+libv86.mjs filter=lfs diff=lfs merge=lfs -text
+v86.wasm filter=lfs diff=lfs merge=lfs -text
+vgabios.bin filter=lfs diff=lfs merge=lfs -text
+seabios.bin filter=lfs diff=lfs merge=lfs -text
