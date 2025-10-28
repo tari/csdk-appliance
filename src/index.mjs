@@ -3,15 +3,16 @@ import v86WasmUrl from 'v86/build/v86.wasm?url'
 import { Terminal } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
 
+// These *must* be marked as assets for vite because we want a URL.
+import biosImageUrl from './machine/seabios.bin'
+import kernelImageUrl from './machine/bzImage.bin'
+
 let emulator = new v86({
     wasm_path: v86WasmUrl,
-    // Ideally these assets would be hashed but not processed,
-    // but vite really wants to try to process the kernel image
-    // and runs out of memory.
-    bios: { url: import.meta.env.BASE_URL + 'bios/seabios.bin' },
+    bios: { url: biosImageUrl },
     // Kernel image has everything built into its embedded initrd
     // (no disk images required, all in RAM)
-    bzimage: { url: import.meta.env.BASE_URL + 'kernel/bzImage' },
+    bzimage: { url: kernelImageUrl },
     cmdline: "console=tty0 console=ttyS0,115200",
     memory_size: 128 << 20,
     //serial_container_xtermjs: document.getElementById('terminal'),

@@ -1,0 +1,18 @@
+buildroot:
+  script:
+    - ./setup.sh
+    # TODO this should use host tools where possible, to save a lot of building
+    - make -C build
+  artifacts:
+    paths:
+      - build/images/bzImage
+
+bundle:
+  before_script:
+    - npm ci
+  script:
+    - mv build/images/bzImage src/machine/bzImage.bin
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
