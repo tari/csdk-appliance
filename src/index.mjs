@@ -6,14 +6,14 @@ import '@xterm/xterm/css/xterm.css'
 // These *must* be marked as assets for vite because we want a URL.
 import biosImageUrl from './machine/seabios.bin'
 import kernelImageUrl from './machine/bzImage.bin'
+import rootfsImageUrl from './machine/rootfs.bin'
 
 let emulator = new v86({
     wasm_path: v86WasmUrl,
     bios: { url: biosImageUrl },
-    // Kernel image has everything built into its embedded initrd
-    // (no disk images required, all in RAM)
     bzimage: { url: kernelImageUrl },
-    cmdline: "console=tty0 console=ttyS0,115200",
+    hda: { url: rootfsImageUrl },
+    cmdline: "console=tty0 console=ttyS0,115200 root=/dev/sda",
     memory_size: 128 << 20,
     //serial_container_xtermjs: document.getElementById('terminal'),
     // VGA isn't being used, can have small memory

@@ -1,0 +1,4 @@
+config BR2_PACKAGE_EZ80_LLVM
+    bool "LLVM tools targeting eZ80"
+    depends on BR2_INSTALL_LIBSTDCPP
+
