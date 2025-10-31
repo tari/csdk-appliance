@@ -1,0 +1,4 @@
+config BR2_PACKAGE_FASMG
+    bool "Flat assembler G"
+    help
+      Install flat assembler g

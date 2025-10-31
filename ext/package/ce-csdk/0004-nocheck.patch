@@ -1,0 +1,13 @@
+diff --git a/makefile b/makefile
+index f19788ad..dbad2741 100644
+--- a/makefile
++++ b/makefile
+@@ -95,8 +95,6 @@ $(addprefix clean-,$(TOOLS)):
+ 	$(Q)$(MAKE) -C $(call TOOLSDIR,$(patsubst clean-%,%,$@)) clean
+ 
+ check:
+-	$(Q)$(EZCC) --version || ( echo Please install ez80-clang && exit 1 )
+-	$(Q)$(FASMG) $(NULL) $(NULL) || ( echo Please install fasmg && exit 1 )
+ 
+ docs:
+ 	$(Q)$(MAKE) -C docs html

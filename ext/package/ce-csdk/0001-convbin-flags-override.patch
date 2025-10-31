@@ -1,0 +1,24 @@
+diff --git a/tools/convbin/Makefile b/tools/convbin/Makefile
+index c03df5d..7e48bda 100644
+--- a/tools/convbin/Makefile
++++ b/tools/convbin/Makefile
+@@ -31,8 +31,8 @@ PRGM_NAME = convbin
+ VERSION_STRING = $(shell git describe --abbrev=8 --dirty --always --tags)
+ 
+ CC = gcc
+-CFLAGS = -Wall -Wextra -Wshadow -O3 -std=c89 -DNDEBUG -DLOG_BUILD_LEVEL=3 -D_LARGEFILE64_SOURCE=1 -DPRGM_NAME="\"$(PRGM_NAME)\"" -DVERSION_STRING="\"$(VERSION_STRING)\"" -flto
+-LDFLAGS = -flto
++override CFLAGS = -Wall -Wextra -Wshadow -O3 -std=c89 -DNDEBUG -DLOG_BUILD_LEVEL=3 -D_LARGEFILE64_SOURCE=1 -DPRGM_NAME="\"$(PRGM_NAME)\"" -DVERSION_STRING="\"$(VERSION_STRING)\"" -flto
++override LDFLAGS = -flto
+ 
+ ifeq ($(OS),Windows_NT)
+   TARGET ?= $(PRGM_NAME).exe
+@@ -94,7 +94,7 @@ release: $(BINDIR)/$(TARGET)
+ $(BINDIR)/$(TARGET): $(OBJECTS)
+ 	$(Q)$(call MKDIR,$(call NATIVEPATH,$(@D)))
+ 	$(Q)$(CC) $(LDFLAGS) $(call NATIVEPATH,$^) -o $(call NATIVEPATH,$@) $(addprefix -l, $(LIBRARIES))
+-	$(Q)$(call STRIP,$@)
++	$(Q)$(STRIP) --strip-all $@
+ 
+ $(OBJDIR)/%.o: $(SRCDIR)/%.c
+ 	$(Q)$(call MKDIR,$(call NATIVEPATH,$(@D)))

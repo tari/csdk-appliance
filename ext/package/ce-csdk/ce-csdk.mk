@@ -1,9 +1,15 @@
-CE_CSDK_VERSION = 13.0
-CE_CSDK_SOURCE = CEdev-linux.tar.gz
-CE_CSDK_SITE = https://github.com/CE-Programming/toolchain/releases/download/v$(CE_CSDK_VERSION)
+CE_CSDK_VERSION = v13.0
+CE_CSDK_SITE_METHOD = git
+CE_CSDK_SITE = https://github.com/CE-programming/toolchain.git
+CE_CSDK_GIT_SUBMODULES = YES
+CE_CSDK_DEPENDENCIES = host-ez80-llvm
+
+define CE_CSDK_BUILD_CMDS
+	$(MAKE) $(TARGET_CONFIGURE_OPTS) GIT_SHA=$(CE_CSDK_VERSION) VERSION_STRING=$(CE_CSDK_VERSION) CEDEV_VERSION=$(CE_CSDK_VERSION) -C $(@D) all
+endef
+
 define CE_CSDK_INSTALL_TARGET_CMDS
-	mkdir $(TARGET_DIR)/CEdev
-	cp -r $(@D)/* $(TARGET_DIR)/CEdev
+	$(MAKE) DESTDIR=$(TARGET_DIR) PREFIX=usr -C $(@D) install
 endef
 
 $(eval $(generic-package))

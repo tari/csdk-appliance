@@ -1,2 +1,3 @@
 source "$BR2_EXTERNAL_CSDK_APPLIANCE_PATH/package/ce-csdk/Config.in"
 source "$BR2_EXTERNAL_CSDK_APPLIANCE_PATH/package/ez80-llvm/Config.in"
+source "$BR2_EXTERNAL_CSDK_APPLIANCE_PATH/package/fasmg/Config.in"

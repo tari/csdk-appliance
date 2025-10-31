@@ -1,7 +1,5 @@
 config BR2_PACKAGE_CE_CSDK
     bool "CE toolchain"
-    # Packaged binaries dynamically link glibc
-    select BR2_PACKAGE_GLIBC
     help
       Install the TI-CE C/C++ toolchain.
 

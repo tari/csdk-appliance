@@ -1,0 +1,24 @@
+diff --git a/tools/cedev-config/Makefile b/tools/cedev-config/Makefile
+index 692d8cad..bc12ece1 100644
+--- a/tools/cedev-config/Makefile
++++ b/tools/cedev-config/Makefile
+@@ -17,8 +17,8 @@
+ include $(CURDIR)/../../src/common.mk
+ 
+ CC = gcc
+-CFLAGS = -Wall -Wextra -Wshadow -O3 -std=c99 -Isrc -DNDEBUG -DCEDEV_VERSION="\"$(CEDEV_VERSION)\"" -flto
+-LDFLAGS = -flto
++override CFLAGS += -Wall -Wextra -Wshadow -O3 -std=c99 -Isrc -DNDEBUG -DCEDEV_VERSION="\"$(CEDEV_VERSION)\"" -flto
++override LDFLAGS += -flto
+ LIBRARIES :=
+ 
+ ifeq ($(OS),Windows_NT)
+@@ -56,7 +56,7 @@ release: $(BINDIR)/$(TARGET)
+ $(BINDIR)/$(TARGET): $(OBJECTS)
+ 	$(Q)$(call MKDIR,$(call NATIVEPATH,$(@D)))
+ 	$(Q)$(CC) $(LDFLAGS) $(call NATIVEPATH,$^) -o $(call NATIVEPATH,$@) $(addprefix -l, $(LIBRARIES))
+-	$(Q)$(call STRIP,$@)
++	$(Q)$(STRIP) --strip-all $@
+ 
+ $(OBJDIR)/%.o: $(SRCDIR)/%.c
+ 	$(Q)$(call MKDIR,$(call NATIVEPATH,$(@D)))
