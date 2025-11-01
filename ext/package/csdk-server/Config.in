@@ -1,0 +1,8 @@
+config BR2_PACKAGE_CE_CSDK_SERVER
+    bool "CE toolchain compiler server"
+    select BR2_PACKAGE_CE_CSDK
+    select BR2_PACKAGE_PYTHON_UVICORN
+    help
+      Install the TI-CE C/C++ toolchain compiler server.
+
+      https://gitlab.com/cemetech/csdk

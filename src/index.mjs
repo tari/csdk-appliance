@@ -12,6 +12,10 @@ let emulator = new v86({
     wasm_path: v86WasmUrl,
     bios: { url: biosImageUrl },
     bzimage: { url: kernelImageUrl },
+    // async: true for the root disk gives faster VM boot, but costs a lot of
+    // latency when starting our (large) clang/llvm-link binaries in order to
+    // load them. It's better for compilation time to front-load the entire
+    // disk image in a single request rather than hundreds of small ones.
     hda: { url: rootfsImageUrl },
     cmdline: "console=tty0 console=ttyS0,115200 root=/dev/sda",
     memory_size: 128 << 20,
