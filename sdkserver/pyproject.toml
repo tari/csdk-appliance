@@ -1,7 +1,6 @@
 [project]
 name = "buildserver"
 version = "0.1.0"
-description = "Add your description here"
 authors = [
     { name = "Peter Marheine", email = "peter@taricorp.net" }
 ]
@@ -12,5 +11,5 @@ dependencies = []
 buildserver = "buildserver:main"
 
 [build-system]
-requires = ["uv_build>=0.9.7,<0.10.0"]
-build-backend = "uv_build"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

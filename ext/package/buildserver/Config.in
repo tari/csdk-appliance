@@ -1,4 +1,4 @@
-config BR2_PACKAGE_CSDK_SERVER
+config BR2_PACKAGE_BUILDSERVER
     bool "CE compiler server"
     select BR2_PACKAGE_CE_CSDK
     select BR2_PACKAGE_PYTHON3
