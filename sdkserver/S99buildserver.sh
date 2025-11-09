@@ -1,21 +1,21 @@
 #!/bin/sh
 
-DAEMON="csdk-server"
+DAEMON="buildserver"
 PIDFILE="/var/run/$DAEMON.pid"
 
-SYSLOGD_ARGS=""
+COMMS=/dev/ttyS1
+ARGS="$COMMS /9pfs --logfile /dev/console"
 
 # shellcheck source=/dev/null
 [ -r "/etc/default/$DAEMON" ] && . "/etc/default/$DAEMON"
 
-# BusyBox' syslogd does not create a pidfile, so pass "-n" in the command line
-# and use "--make-pidfile" to instruct start-stop-daemon to create one.
 start() {
         printf 'Starting %s: ' "$DAEMON"
+        stty -F "$COMMS" raw 115200
         # shellcheck disable=SC2086 # we need the word splitting
         start-stop-daemon --start --background --make-pidfile \
-                --pidfile "$PIDFILE" --exec "/sbin/$DAEMON" \
-                -- -n $SYSLOGD_ARGS
+                --pidfile "$PIDFILE" --exec "/usr/bin/$DAEMON" \
+                -- $ARGS
         status=$?
         if [ "$status" -eq 0 ]; then
                 echo "OK"
@@ -27,7 +27,7 @@ start() {
 
 stop() {
         printf 'Stopping %s: ' "$DAEMON"
-        start-stop-daemon --stop --pidfile "$PIDFILE" --exec "/sbin/$DAEMON"
+        start-stop-daemon --stop --pidfile "$PIDFILE" --exec "/usr/bin/$DAEMON"
         status=$?
         if [ "$status" -eq 0 ]; then
                 echo "OK"
@@ -36,7 +36,7 @@ stop() {
                 return "$status"
         fi
         while start-stop-daemon --stop --test --quiet --pidfile "$PIDFILE" \
-                --exec "/sbin/$DAEMON"; do
+                --exec "/usr/bin/$DAEMON"; do
                 sleep 0.1
         done
         rm -f "$PIDFILE"

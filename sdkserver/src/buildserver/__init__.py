@@ -1,11 +1,11 @@
 #!/usr/bin/env python
+import argparse
 from collections.abc import Sequence
 import dataclasses
 from dataclasses import dataclass
 from enum import IntEnum
 import io
 import logging
-import os
 from pathlib import Path
 import shlex
 import shutil
@@ -31,6 +31,7 @@ class Build:
             self.server.write_packet(PacketKind.RUNNING, line.encode("utf-8"))
 
         self.process.wait()
+        logger.info("Build completed; notifying server")
         self.server.build_completed(self)
 
     @classmethod
@@ -101,6 +102,7 @@ class BuildServer:
         init=False, repr=False, default_factory=threading.RLock
     )
     build: Build | None = None
+    exit_requested: bool = False
 
     def read_packet(self) -> Packet:
         data = read_exactly(self.comms, PacketHeader.size)
@@ -122,8 +124,14 @@ class BuildServer:
             if payload:
                 write_all(self.comms, payload)
 
+    def run(self):
+        while not self.exit_requested:
+            self.do_rx()
+
     def do_rx(self):
         packet = self.read_packet()
+        logger.info("Received packet %s of %d bytes", packet.kind, len(packet.payload))
+
         match packet.kind:
             case PacketKind.ERROR:
                 logger.error("Received error packet from other end: %s", packet.payload)
@@ -133,10 +141,12 @@ class BuildServer:
                     self.write_packet(PacketKind.ERROR, b"Build already in progress")
                     return
 
+                args = shlex.split(packet.payload.decode("utf-8", errors="replace"))
+                logger.info("Starting build in %s with args %s", self.build_dir, args)
                 self.build = Build.start(
                     self,
                     self.build_dir,
-                    shlex.split(packet.payload.decode("utf-8", errors="replace")),
+                    args
                 )
 
             case PacketKind.CANCEL:
@@ -144,10 +154,12 @@ class BuildServer:
                     self.write_packet(PacketKind.ERROR, b"No build in progress")
                     return
 
+                logger.info("Cancelling running build")
                 self.build.stop()
                 self.build = None
 
             case other:
+                logger.error("Unrecognized packet kind %s", packet.kind)
                 self.write_packet(
                     PacketKind.ERROR,
                     f"Unrecognized packet type: {other}".encode("utf-8"),
@@ -159,3 +171,24 @@ class BuildServer:
         status = build.join()
         self.write_packet(PacketKind.COMPLETE, status.to_bytes(length=4, signed=True))
         self.build = None
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('socket_path')
+    parser.add_argument('build_dir')
+    parser.add_argument('-l', '--logfile')
+    args = parser.parse_args()
+
+    if args.logfile is not None:
+        logging.basicConfig(filename=args.logfile)
+
+    with open(args.socket_path, 'r+b') as comms:
+        server = BuildServer(comms, args.build_dir)
+        thread = threading.Thread(target=server.run, daemon=True)
+        thread.start()
+        thread.join()
+
+
+if __name__ == '__main__':
+    main()
