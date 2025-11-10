@@ -11,7 +11,7 @@ ARGS="$COMMS /9pfs --logfile /dev/console"
 
 start() {
         printf 'Starting %s: ' "$DAEMON"
-        stty -F "$COMMS" raw 115200
+        stty -F "$COMMS" raw -echo 115200
         # shellcheck disable=SC2086 # we need the word splitting
         start-stop-daemon --start --background --make-pidfile \
                 --pidfile "$PIDFILE" --exec "/usr/bin/$DAEMON" \

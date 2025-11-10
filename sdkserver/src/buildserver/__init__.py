@@ -174,11 +174,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("socket_path")
     parser.add_argument("build_dir")
-    parser.add_argument("-l", "--logfile")
     args = parser.parse_args()
 
-    if args.logfile is not None:
-        logging.basicConfig(filename=args.logfile)
+    logging.basicConfig(filename="/dev/stdout", level=logging.INFO)
 
     with open(args.socket_path, "rb") as rx, open(
         args.socket_path, "wb"
