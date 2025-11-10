@@ -143,11 +143,8 @@ class BuildServer:
 
                 args = shlex.split(packet.payload.decode("utf-8", errors="replace"))
                 logger.info("Starting build in %s with args %s", self.build_dir, args)
-                self.build = Build.start(
-                    self,
-                    self.build_dir,
-                    args
-                )
+                self.build = Build.start(self, self.build_dir, args)
+                self.write_packet(PacketKind.STARTED, None)
 
             case PacketKind.CANCEL:
                 if self.build is None:
@@ -175,20 +172,22 @@ class BuildServer:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('socket_path')
-    parser.add_argument('build_dir')
-    parser.add_argument('-l', '--logfile')
+    parser.add_argument("socket_path")
+    parser.add_argument("build_dir")
+    parser.add_argument("-l", "--logfile")
     args = parser.parse_args()
 
     if args.logfile is not None:
         logging.basicConfig(filename=args.logfile)
 
-    with open(args.socket_path, 'r+b') as comms:
+    with open(args.socket_path, "rb") as rx, open(
+        args.socket_path, "wb"
+    ) as tx, io.BufferedRWPair(rx, tx) as comms:
         server = BuildServer(comms, args.build_dir)
         thread = threading.Thread(target=server.run, daemon=True)
         thread.start()
         thread.join()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
