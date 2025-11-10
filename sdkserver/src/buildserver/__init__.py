@@ -178,9 +178,7 @@ def main():
 
     logging.basicConfig(filename="/dev/stdout", level=logging.INFO)
 
-    with open(args.socket_path, "rb") as rx, open(
-        args.socket_path, "wb"
-    ) as tx, io.BufferedRWPair(rx, tx) as comms:
+    with open(args.socket_path, "r+b", buffering=0) as comms:
         server = BuildServer(comms, args.build_dir)
         thread = threading.Thread(target=server.run, daemon=True)
         thread.start()

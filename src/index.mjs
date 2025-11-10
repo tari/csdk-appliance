@@ -9,11 +9,11 @@ import kernelImageUrl from './machine/bzImage.bin'
 import rootfsImageUrl from './machine/rootfs.bin'
 
 class CECompiler {
-    #emulator;
+    emulator;
     #terminal;
 
     constructor(terminal_container) {
-        const emulator = this.#emulator = new v86({
+        const emulator = this.emulator = new v86({
             wasm_path: v86WasmUrl,
             bios: { url: biosImageUrl },
             bzimage: { url: kernelImageUrl },
@@ -46,7 +46,7 @@ class CECompiler {
                 emulator.serial0_send(data);
             });
 
-            this.#emulator.add_listener("serial0-output-byte", (byte) => {
+            this.emulator.add_listener("serial0-output-byte", (byte) => {
                 terminal.write(Uint8Array.of(byte));
             });
         }
@@ -60,18 +60,18 @@ class CECompiler {
             // root of filesystem
             return 0;
         }
-        const info = this.#emulator.fs9p.SearchPath(path);
+        const info = this.emulator.fs9p.SearchPath(path);
         if (info.id !== -1) {
             console.log("already exists with id %d", info.id);
             return info.id;
         }
         const parent = this.#mkdirs(dirpath(path));
         console.log("CreateDirectory(%s, %d)", basename(path), parent);
-        return this.#emulator.fs9p.CreateDirectory(basename(path), parent);
+        return this.emulator.fs9p.CreateDirectory(basename(path), parent);
     }
 
     sendPacket(type, payload) {
-        const send = (byte) => this.#emulator.bus.send("serial1-input", byte);
+        const send = (byte) => this.emulator.bus.send("serial1-input", byte);
         
         send(type);
         const len = payload.length;
@@ -109,7 +109,7 @@ class CECompiler {
             const dirId = this.#mkdirs(BUILD_DIR + '/' + dirpath(filepath));
             console.log("build: created dir %d", dirId);
             console.log("CreateBinaryFile(%s, %d, %s)", filename, dirId, fileData);
-            await this.#emulator.fs9p.CreateBinaryFile(filename, dirId, fileData);
+            await this.emulator.fs9p.CreateBinaryFile(filename, dirId, fileData);
         }
 
         let outputListener;
@@ -151,12 +151,12 @@ class CECompiler {
                     }
                 }
             };
-            this.#emulator.add_listener("serial1-output-byte", outputListener);
+            this.emulator.add_listener("serial1-output-byte", outputListener);
         });
 
         this.sendPacket(1, []);
         await buildResult;
-        this.#emulator.remove_listener("serial1-output-byte", outputListener);
+        this.emulator.remove_listener("serial1-output-byte", outputListener);
 
         // make -C /9pfs/build $(MAKEOPTS)
         // bin/*.8xp?
@@ -169,7 +169,7 @@ class CECompiler {
         //  < COMPLETE id status_code
         //  > CANCEL id
 
-        //this.#emulator.fs9p.RecursiveDelete(BUILD_DIR);
+        //this.emulator.fs9p.RecursiveDelete(BUILD_DIR);
     }
 }
 
