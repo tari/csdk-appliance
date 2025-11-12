@@ -125,6 +125,7 @@ class BuildServer:
                 write_all(self.comms, payload)
 
     def run(self):
+        logger.info("BuildServer running")
         while not self.exit_requested:
             self.do_rx()
 

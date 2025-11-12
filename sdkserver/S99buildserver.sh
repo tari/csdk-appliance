@@ -4,7 +4,7 @@ DAEMON="buildserver"
 PIDFILE="/var/run/$DAEMON.pid"
 
 COMMS=/dev/ttyS1
-ARGS="$COMMS /9pfs --logfile /dev/console"
+ARGS="$COMMS /9pfs/build"
 
 # shellcheck source=/dev/null
 [ -r "/etc/default/$DAEMON" ] && . "/etc/default/$DAEMON"
@@ -15,7 +15,7 @@ start() {
         # shellcheck disable=SC2086 # we need the word splitting
         start-stop-daemon --start --background --make-pidfile \
                 --pidfile "$PIDFILE" --exec "/usr/bin/$DAEMON" \
-                -- $ARGS
+                -O /dev/console -- $ARGS
         status=$?
         if [ "$status" -eq 0 ]; then
                 echo "OK"

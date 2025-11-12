@@ -122,7 +122,8 @@ class CECompiler {
 
                 if (rxBytes.length == 5) {
                     pktLen = (rxBytes[1] << 24) | (rxBytes[2] << 16) | (rxBytes[3] << 8) | rxBytes[4];
-                } else if (pktLen !== null && rxBytes.length == (pktLen + 5)) {
+                }
+                if (pktLen !== null && rxBytes.length == (pktLen + 5)) {
                     // Got a full packet
                     const kind = rxBytes[0];
                     const payload = rxBytes.slice(5);
