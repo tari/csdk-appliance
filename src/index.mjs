@@ -10,6 +10,8 @@ import rootfsImageUrl from './machine/rootfs.bin'
 
 class CECompiler {
     emulator;
+    /** A promise that resolves when the build server reports it's ready. */
+    ready;
     #terminal;
 
     constructor(terminal_container) {
@@ -35,7 +37,8 @@ class CECompiler {
             disable_keyboard: true,
             disable_mouse: true,
             disable_speaker: true,
-            autostart: true,
+            // Need to hook up I/O before starting
+            autostart: false,
         });
 
         this.#terminal = null;
@@ -50,6 +53,37 @@ class CECompiler {
                 terminal.write(Uint8Array.of(byte));
             });
         }
+
+        // Wait for the VMM to be ready, then boot the VM
+        const booting = new Promise((resolve, reject) => {
+            const onLoaded = () => {
+                console.log("VMM loaded; booting VM");
+                this.emulator.remove_listener("emulator-loaded", onLoaded);
+                this.emulator.run();
+
+                resolve();
+            };
+            this.emulator.add_listener("emulator-loaded", onLoaded);
+        });
+
+        // Listen for the build server to report readiness
+        this.ready = booting.then((ignored_result) =>
+            new Promise((resolve, reject) => {
+                const data = [];
+                const handleByte = (byte) => {
+                    data.push(byte);
+                    if (data == [0x83, 0, 0, 0, 0]) {
+                        console.log("Received READY packet; build server is ready!");
+                        resolve(null);
+                    } else if (data.length > 5) {
+                        reject("Unexpected data received from uart1: " + data);
+                    }
+
+                    this.emulator.remove_listener("serial1-output-byte", handleByte);
+                };
+                this.emulator.add_listener("serial1-output-byte", handleByte);
+            })
+        );
     }
 
     #mkdirs(path) {
@@ -111,6 +145,8 @@ class CECompiler {
             console.log("CreateBinaryFile(%s, %d, %s)", filename, dirId, fileData);
             await this.emulator.fs9p.CreateBinaryFile(filename, dirId, fileData);
         }
+
+        await this.ready;
 
         let outputListener;
         const buildResult = new Promise((resolve, reject) => {

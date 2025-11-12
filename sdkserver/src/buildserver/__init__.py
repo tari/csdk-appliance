@@ -63,6 +63,7 @@ class PacketKind(IntEnum):
     STARTED = 0x80
     RUNNING = 0x81
     COMPLETE = 0x82
+    READY = 0x83
 
 
 PacketHeader = struct.Struct("!BI")
@@ -125,7 +126,9 @@ class BuildServer:
                 write_all(self.comms, payload)
 
     def run(self):
-        logger.info("BuildServer running")
+        logger.info("BuildServer ready to process requests")
+        self.write_packet(PacketKind.READY, None)
+
         while not self.exit_requested:
             self.do_rx()
 
