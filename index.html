@@ -5,6 +5,50 @@
     <script type="module" src="./src/index.mjs"></script>
 </head>
 <body>
-    <h2>Terminal</h2>
-    <div id="terminal"></div>
+    <div style="display: flex; flex-direction: row; height: 25em;">
+        <textarea id="main.c" style="flex: 1 0 auto">
+#include <ti/screen.h>
+#include <ti/getcsc.h>
+#include <stdlib.h>
+
+/* Main function, called first */
+int main(void)
+{
+    /* Clear the homescreen */
+    os_ClrHome();
+
+    /* Print a string */
+    os_PutStrFull("Hello, World.");
+
+    /* Waits for a key */
+    while (!os_GetCSC());
+
+    /* Return 0 for success */
+    return 0;
+}
+        </textarea>
+        <textarea id="makefile" style="flex: 1 0 auto">
+NAME = DEMO
+ICON = icon.png
+DESCRIPTION = "CE C Toolchain Demo"
+COMPRESSED = NO
+
+CFLAGS = -Wall -Wextra -Oz
+CXXFLAGS = -Wall -Wextra -Oz
+
+include $(shell cedev-config --makefile)
+        </textarea>
+    </div>
+    <div id="loading">Compiler is loading, please wait..</div>
+    <button id="buildButton" disabled>Build!</button>
+    <div>
+        <textarea id="buildOutput" cols="80" rows="10"></textarea>
+    </div>
+    <hr>
+    <details>
+        <summary>Terminal</summary>
+        <div id="terminal"></div>
+        <button id="unpauseButton" disabled>Unpause VM</button>
+    </details>
+
 </body>

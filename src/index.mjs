@@ -13,8 +13,11 @@ class CECompiler {
     /** A promise that resolves when the build server reports it's ready. */
     ready;
     #terminal;
+    #buildsInProgress;
 
     constructor(terminal_container) {
+        this.#buildsInProgress = 0;
+
         const emulator = this.emulator = new v86({
             wasm_path: v86WasmUrl,
             bios: { url: biosImageUrl },
@@ -67,40 +70,39 @@ class CECompiler {
         });
 
         // Listen for the build server to report readiness
-        this.ready = booting.then((ignored_result) =>
-            new Promise((resolve, reject) => {
-                const data = [];
+        this.ready = booting.then((ignored) => {
+            const data = [];
+            const readyPacket = [0x83, 0, 0, 0, 0];
+            return new Promise((resolve, reject) => {
                 const handleByte = (byte) => {
                     data.push(byte);
-                    if (data == [0x83, 0, 0, 0, 0]) {
-                        console.log("Received READY packet; build server is ready!");
-                        resolve(null);
-                    } else if (data.length > 5) {
-                        reject("Unexpected data received from uart1: " + data);
+                    if (data.length === readyPacket.length) {
+                        if (data.every((x, i) => x === readyPacket[i])) {
+                            console.log("VM is ready; stopping emulation until needed")
+                            this.emulator.stop();
+                            resolve(null);
+                        } else {
+                            reject("Unexpected data received from uart1: " + data);
+                        } 
+                        this.emulator.remove_listener("serial1-output-byte", handleByte);
                     }
-
-                    this.emulator.remove_listener("serial1-output-byte", handleByte);
                 };
                 this.emulator.add_listener("serial1-output-byte", handleByte);
-            })
-        );
+            });
+        });
     }
 
     #mkdirs(path) {
         path = path.replace(/\/+$/g, '')
-        console.log("#mkdirs(%s)", path);
         if (!path) {
-            console.log("is root");
             // root of filesystem
             return 0;
         }
         const info = this.emulator.fs9p.SearchPath(path);
         if (info.id !== -1) {
-            console.log("already exists with id %d", info.id);
             return info.id;
         }
         const parent = this.#mkdirs(dirpath(path));
-        console.log("CreateDirectory(%s, %d)", basename(path), parent);
         return this.emulator.fs9p.CreateDirectory(basename(path), parent);
     }
 
@@ -125,35 +127,36 @@ class CECompiler {
      * Args:
      *  * directory: an object mapping file paths to their contents (as Uint8Array).
      *  * makeOpts: extra options passed to make, interpreted by the shell.
+     *  * progressCallback: a function called zero or more times with a string containing
+     *                      ongoing output from the build process.
      *
      * Returns: a Uint8Array of compiled program contents.
      */
-    async build(directory, makeOpts) {
+    async build(directory, makeOpts, progressCallback) {
         const BUILD_DIR = '/build';
 
         for (let filepath in directory) {
             const fileData = directory[filepath];
             filepath = filepath.replaceAll('//', '/');
             const filename = basename(filepath);
-            console.log("build: file %s", filepath);
             if (filename === null) {
                 continue;
             }
 
             const dirId = this.#mkdirs(BUILD_DIR + '/' + dirpath(filepath));
-            console.log("build: created dir %d", dirId);
-            console.log("CreateBinaryFile(%s, %d, %s)", filename, dirId, fileData);
             await this.emulator.fs9p.CreateBinaryFile(filename, dirId, fileData);
         }
 
         await this.ready;
+        // Resume the VM if it was paused
+        this.#buildsInProgress += 1;
+        this.emulator.run();
 
         let outputListener;
         const buildResult = new Promise((resolve, reject) => {
             let rxBytes = [];
             let pktLen = null;
             outputListener = (byte) => {
-                console.log("Raw serial byte rx: %d", byte);
                 rxBytes.push(byte);
 
                 if (rxBytes.length == 5) {
@@ -176,6 +179,7 @@ class CECompiler {
                         case 0x81:  // RUNNING
                             const text = new TextDecoder().decode(new Uint8Array(payload));
                             console.log("Received RUNNING: %s", text);
+                            progressCallback(text);
                             break;
                         case 0x82:  // COMPLETE
                             const status = (payload[0] << 24) | (payload[1] << 16) | (payload[2] << 8) | payload[3];
@@ -195,17 +199,13 @@ class CECompiler {
         await buildResult;
         this.emulator.remove_listener("serial1-output-byte", outputListener);
 
-        // make -C /9pfs/build $(MAKEOPTS)
-        // bin/*.8xp?
+        // Pause the VM again if it's not needed
+        this.#buildsInProgress -= 1;
+        if (this.#buildsInProgress === 0) {
+            this.emulator.stop();
+        }
 
-        // Line-based command/response:
-        // commands:
-        //  > BUILD id make_opts (id is a directory name)
-        //  < STARTED id
-        //  < OUTPUT id text
-        //  < COMPLETE id status_code
-        //  > CANCEL id
-
+        // TODO return something
         //this.emulator.fs9p.RecursiveDelete(BUILD_DIR);
     }
 }
@@ -237,5 +237,28 @@ function dirpath(path) {
     return path.slice(0, idx);
 }
 
-window.CECompiler = new CECompiler(document.getElementById('terminal'));
-console.log('CECompiler instantiation complete')
+const compiler = new CECompiler(document.getElementById('terminal'));
+const sourceInput = document.getElementById('main.c');
+const makefileInput = document.getElementById('makefile');
+const buildButton = document.getElementById('buildButton');
+const buildOutput = document.getElementById('buildOutput');
+const unpauseButton = document.getElementById('unpauseButton');
+
+buildButton.addEventListener('click', async (evt) => {
+    const encoder = new TextEncoder();
+    await compiler.build({
+        'src/main.c': encoder.encode(sourceInput.value),
+        'makefile': encoder.encode(makefileInput.value),
+    }, 'all', (text) => {
+        buildOutput.value += text;
+    });
+});
+
+unpauseButton.addEventListener('click', (evt) => {
+    compiler.emulator.run();
+});
+
+await compiler.ready;
+document.getElementById('loading').hidden = true;
+buildButton.disabled = false;
+unpauseButton.disabled = false;

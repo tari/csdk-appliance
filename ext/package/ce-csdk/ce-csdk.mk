@@ -10,10 +10,12 @@ endef
 
 define CE_CSDK_INSTALL_TARGET_CMDS
 	$(MAKE) DESTDIR=$(TARGET_DIR) PREFIX=CEdev -C $(@D) install
+	for bin in cedev-config convbin convfont convimg; do \
+		ln -sf /CEdev/bin/$$bin $(TARGET_DIR)/usr/bin/$$bin ;\
+	done
 	ln -sf /usr/bin/ez80-clang $(TARGET_DIR)/CEdev/bin/ez80-clang
 	ln -sf /usr/bin/ez80-link $(TARGET_DIR)/CEdev/bin/ez80-link
 	ln -sf /usr/bin/fasmg $(TARGET_DIR)/CEdev/bin/fasmg
-	echo 'export PATH="$${PATH}:/CEdev/bin"' >$(TARGET_DIR)/etc/profile.d/cedev.sh
 endef
 
 $(eval $(generic-package))
