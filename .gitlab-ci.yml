@@ -37,4 +37,4 @@ pages:
     - mv dist public
   pages: true
   rules:
-    - if: $CI_COMMIT-BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
