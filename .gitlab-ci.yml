@@ -8,6 +8,8 @@ buildroot:
   stage: build
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
+  before_script:
+    - apt-get update && apt-get install -y rsync cpio bc
   script:
     - ./setup.sh
     - make -C build
