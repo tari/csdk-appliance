@@ -1,18 +1,40 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: none
+
 buildroot:
+  stage: build
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
   script:
     - ./setup.sh
-    # TODO this should use host tools where possible, to save a lot of building
     - make -C build
+  cache:
+    key: buildroot-downloads
+    untracked: true
+    paths:
+      - buildroot/dl/
   artifacts:
     paths:
-      - build/images/bzImage
+      - build/images/
 
 bundle:
+  stage: build
+  needs: [buildroot]
   before_script:
     - npm ci
   script:
     - mv build/images/bzImage src/machine/bzImage.bin
+    - mv build/images/rootfs.squashfs src/machine/rootfs.bin
     - npm run build
   artifacts:
     paths:
       - dist/
+
+pages:
+  stage: deploy
+  needs: [bundle]
+  script:
+    - mv dist public
+  pages: true
+  rules:
+    - if: $CI_COMMIT-BRANCH == $CI_DEFAULT_BRANCH
