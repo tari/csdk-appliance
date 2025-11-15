@@ -1,7 +1,8 @@
 default:
-  variables:
-    GIT_SUBMODULE_STRATEGY: none
   image: buildpack-deps
+
+variables:
+  GIT_SUBMODULE_STRATEGY: none
 
 buildroot:
   stage: build
