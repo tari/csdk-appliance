@@ -1,0 +1,23 @@
+on: push
+
+jobs:
+  buildroot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+          submodules: true
+      - uses: actions/cache@v4
+        id: cache-buildroot-dl
+        with:
+          key: buildroot-dl
+          path:
+            - buildroot/dl
+      - run: |
+          ./setup.sh
+          make -C build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: buildroot
+          path: build/images/
