@@ -20,3 +20,65 @@ jobs:
         with:
           name: buildroot
           path: build/images/
+  web:
+    needs: buildroot
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+          submodules: false
+      - name: Download buildroot images
+        uses: actions/download-artifact@v5
+        with:
+          name: buildroot
+      - name: Emplace buildroot images
+        run: |
+          mv bzImage src/machine/bzImage.bin
+          mv rootfs.squashfs src/machine/rootfs.bin
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install npm packages
+        run: npm ci
+      - name: Build web
+        run: npm run build
+      - name: Upload web artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: dist/
+  
+  deploy-pages:
+    if: github.ref_name == github.event.repository.default_branch
+    needs: web
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download web files
+        uses: actions/download-artifact@v5
+        with:
+          name: web-dist
+      - name: Upload web files as pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
