@@ -8,6 +8,10 @@ jobs:
         with:
           lfs: true
           submodules: true
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          max-size: 5G
       - uses: actions/cache@v4
         id: cache-buildroot-dl
         with:
@@ -15,7 +19,10 @@ jobs:
           path: buildroot/dl
       - run: |
           ./setup.sh
+          echo BR2_CCACHE=y >> build/.config
           make -C build
+        env:
+          BR2_CCACHE_DIR: "${{ github.workspace }}/.ccache"
       - uses: actions/upload-artifact@v4
         with:
           name: buildroot
