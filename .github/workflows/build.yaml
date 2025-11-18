@@ -58,7 +58,7 @@ jobs:
       - name: Install npm packages
         run: npm ci
       - name: Build web
-        run: npm run build
+        run: npm run build -- --base=./
       - name: Upload web artifacts
         uses: actions/upload-artifact@v4
         with:
