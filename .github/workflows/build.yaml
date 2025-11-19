@@ -56,13 +56,20 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
       - name: Install npm packages
-        run: npm ci
+        run: npm ci --include optional
       - name: Build web
         run: npm run build -- --base=./
       - name: Upload web artifacts
         uses: actions/upload-artifact@v4
         with:
           name: web-dist
+          path: dist/
+      - name: Build web (standalone HTML)
+        run: npm run build -- --config=vite.singlefile.config.js
+      - name: Upload standalone HTML artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-html
           path: dist/
   
   deploy-pages:
@@ -83,6 +90,11 @@ jobs:
         with:
           name: web-dist
           path: dist
+      - name: Download standalone HTML
+        uses: actions/download-artifact@v5
+        with:
+          name: standalone-html
+          path: dist/standalone
       - name: Upload web files as pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
