@@ -14,5 +14,8 @@
   "dependencies": {
     "@xterm/xterm": "^5.5.0",
     "v86": "^0.5.262"
+  },
+  "optionalDependencies": {
+    "vite-plugin-singlefile": "^2.3.0"
   }
 }
