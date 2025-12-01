@@ -9,5 +9,5 @@ import config from './vite.config.js';
 
 export default defineConfig({
     ...config,
-    plugins: [viteSingleFile()],
+    plugins: (config.plugins ?? []) + [viteSingleFile()],
 });
