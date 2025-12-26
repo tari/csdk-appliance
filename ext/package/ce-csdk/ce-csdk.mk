@@ -1,4 +1,4 @@
-CE_CSDK_VERSION = v13.0
+CE_CSDK_VERSION = v14.0
 CE_CSDK_SITE_METHOD = git
 CE_CSDK_SITE = https://github.com/CE-programming/toolchain.git
 CE_CSDK_GIT_SUBMODULES = YES

@@ -1,4 +1,4 @@
-EZ80_LLVM_VERSION = 1d6267604fabcc7caf67ab759bb38c9a086a7213
+EZ80_LLVM_VERSION = 263e6374ab7ac991c1bac4ed5ae7821242623cc5
 EZ80_LLVM_SITE = $(call github,CE-programming,llvm-project,$(EZ80_LLVM_VERSION))
 
 HOST_EZ80_LLVM_DEPENDENCIES = host-python3 host-llvm-cmake
